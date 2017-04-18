@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/astronoka/migu/dialect"
+	"github.com/azer/snakecase"
 	"github.com/naoina/go-stringutil"
 )
 
@@ -605,9 +606,9 @@ func toStructPublicFieldName(s string) string {
 }
 
 func toSchemaTableName(s string) string {
-	return stringutil.ToSnakeCase(s)
+	return snakecase.SnakeCase(s)
 }
 
 func toSchemaFieldName(s string) string {
-	return stringutil.ToSnakeCase(s)
+	return snakecase.SnakeCase(s)
 }
