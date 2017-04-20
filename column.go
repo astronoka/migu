@@ -129,12 +129,12 @@ func (schema *columnSchema) GoFieldTypes() ([]string, error) {
 		return []string{"time.Time"}, nil
 	case "double":
 		if schema.isNullable() {
-			return []string{"*float32", "*float64", "sql.NullFloat64"}, nil
+			return []string{"*float64", "sql.NullFloat64"}, nil
 		}
-		return []string{"float32", "float64"}, nil
+		return []string{"float64"}, nil
 	case "float":
 		if schema.isNullable() {
-			return []string{"*float32", "sql.NullFloat64"}, nil
+			return []string{"*float32", "sql.NullFloat32"}, nil
 		}
 		return []string{"float32"}, nil
 	default:
