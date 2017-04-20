@@ -52,7 +52,7 @@ func (schema *columnSchema) fieldAST() (*ast.Field, error) {
 	if schema.hasUniqueKey() {
 		tags = append(tags, tagUnique)
 	}
-	if schema.hasSize() {
+	if schema.hasCharacterMaximumLength() {
 		tags = append(tags, fmt.Sprintf("%s:%d", tagSize, *schema.CharacterMaximumLength))
 	}
 	if len(tags) > 0 {
@@ -162,8 +162,8 @@ func (schema *columnSchema) hasUniqueKey() bool {
 	return schema.ColumnKey != "" && schema.IndexName != "" && !schema.hasPrimaryKey()
 }
 
-func (schema *columnSchema) hasSize() bool {
-	return schema.DataType == "varchar" && schema.CharacterMaximumLength != nil && *schema.CharacterMaximumLength != uint64(255)
+func (schema *columnSchema) hasCharacterMaximumLength() bool {
+	return schema.CharacterMaximumLength != nil
 }
 
 func (schema *columnSchema) HasDifference(newColumn *field) bool {
