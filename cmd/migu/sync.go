@@ -55,11 +55,11 @@ func (s *sync) Execute(args []string) error {
 		return err
 	}
 	defer db.Close()
-	s.printf("======== %ssync ========\n", dryRunMarker)
-	defer s.printf("======== %sdone ========\n", dryRunMarker)
 	if !s.DryRun {
 		dryRunMarker = ""
 	}
+	s.printf("======== %ssync ========\n", dryRunMarker)
+	defer s.printf("======== %sdone ========\n", dryRunMarker)
 	return s.run(db, file)
 }
 
