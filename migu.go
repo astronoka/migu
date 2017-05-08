@@ -520,7 +520,11 @@ func parseStructTag(f *field, tag reflect.StructTag) error {
 		switch optval[0] {
 		case tagDefault:
 			if len(optval) > 1 {
-				f.Default = optval[1]
+				if f.Type == "bool" {
+					f.Default = normalizeBoolDefaultTagTo0or1(optval[1])
+				} else {
+					f.Default = optval[1]
+				}
 			}
 		case tagPrimaryKey:
 			f.PrimaryKey = true
@@ -547,6 +551,14 @@ func parseStructTag(f *field, tag reflect.StructTag) error {
 		f.Size = 0
 	}
 	return nil
+}
+
+func normalizeBoolDefaultTagTo0or1(s string) string {
+	switch strings.ToLower(s) {
+	case "1", "true", "on":
+		return "1"
+	}
+	return "0"
 }
 
 func isSizeRequiredType(typeName string) bool {
