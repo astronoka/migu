@@ -74,6 +74,12 @@ func (schema *columnSchema) fieldAST() (*ast.Field, error) {
 func (schema *columnSchema) GoFieldTypes() ([]string, error) {
 	switch schema.DataType {
 	case "tinyint":
+		if schema.ColumnType == "tinyint(1)" {
+			if schema.isNullable() {
+				return []string{"*bool", "sql.NullBool"}, nil
+			}
+			return []string{"bool"}, nil
+		}
 		if schema.isUnsigned() {
 			if schema.isNullable() {
 				return []string{"*uint8"}, nil
@@ -81,9 +87,9 @@ func (schema *columnSchema) GoFieldTypes() ([]string, error) {
 			return []string{"uint8"}, nil
 		}
 		if schema.isNullable() {
-			return []string{"*int8", "*bool", "sql.NullBool"}, nil
+			return []string{"*int8"}, nil
 		}
-		return []string{"int8", "bool"}, nil
+		return []string{"int8"}, nil
 	case "smallint":
 		if schema.isUnsigned() {
 			if schema.isNullable() {

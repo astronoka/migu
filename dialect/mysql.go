@@ -23,9 +23,9 @@ func (d *MySQL) ColumnType(name string, size uint64, autoIncrement bool) (typ st
 	case "*int8":
 		return "TINYINT", true
 	case "bool":
-		return "TINYINT", false
+		return "BOOL", false
 	case "*bool", "sql.NullBool":
-		return "TINYINT", true
+		return "BOOL", true
 	case "int16":
 		return "SMALLINT", false
 	case "*int16":
