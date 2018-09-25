@@ -24,7 +24,6 @@ _testmain.go
 *.prof
 
 # glide
-.glide
 vendor
 
 # artifacts
