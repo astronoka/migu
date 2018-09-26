@@ -1,4 +1,4 @@
-# Migu [![Build Status](https://travis-ci.org/astronoka/migu.svg?branch=master)](https://travis-ci.org/astronoka/migu)
+# Migu [![CircleCI](https://circleci.com/gh/astronoka/migu/tree/develop.svg?style=svg)](https://circleci.com/gh/astronoka/migu/tree/develop)
 
 Database schema migration tool for [Go](http://golang.org).
 
