@@ -17,3 +17,29 @@ jobs:
       - run: 'curl -fSL https://github.com/haya14busa/reviewdog/releases/download/$REVIEWDOG_VERSION/reviewdog_linux_amd64 -o reviewdog && chmod +x ./reviewdog'
       - run: 'go get honnef.co/go/tools/cmd/unused'
       - run: 'unused ./... || true | ./reviewdog -efm="%f:%l:%c: %m" -name=unused -reporter=github-pr-check'
+  release:
+    docker:
+      - image: golang:latest
+    working_directory: /go/src/github.com/astronoka/migu
+    steps:
+      - checkout
+      - run: 'go get -u github.com/golang/dep/cmd/dep'
+      - run: 'dep ensure -v -vendor-only=true'
+      - run: curl -sL https://git.io/goreleaser | bash
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build:
+          # ref: https://circleci.com/docs/2.0/workflows/#git-tag-job-execution
+          filters:
+            tags:
+              only: /.*/
+      - release:
+          requires:
+            - build
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.*)*/
