@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
+	"os"
 	"reflect"
 	"sort"
 	"testing"
@@ -15,8 +16,12 @@ import (
 var db *sql.DB
 
 func init() {
+	dsn := "usr:pwd@127.0.0.1/testdb"
+	if s, found := os.LookupEnv("MYSQL_DSN"); found {
+		dsn = s
+	}
 	var err error
-	db, err = sql.Open("mysql", "travis@/migu_test")
+	db, err = sql.Open("mysql", dsn)
 	if err != nil {
 		panic(err)
 	}
