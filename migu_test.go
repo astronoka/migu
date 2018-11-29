@@ -1,9 +1,9 @@
 package migu_test
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
+	"os"
 	"reflect"
 	"sort"
 	"testing"
@@ -15,8 +15,12 @@ import (
 var db *sql.DB
 
 func init() {
+	dsn := "usr:pwd@127.0.0.1/testdb"
+	if s, found := os.LookupEnv("MYSQL_DSN"); found {
+		dsn = s
+	}
 	var err error
-	db, err = sql.Open("mysql", "travis@/migu_test")
+	db, err = sql.Open("mysql", dsn)
 	if err != nil {
 		panic(err)
 	}
@@ -55,12 +59,12 @@ func TestDiffWithSrc(t *testing.T) {
 		"string":          "VARCHAR(255) NOT NULL",
 		"*string":         "VARCHAR(255)",
 		"sql.NullString":  "VARCHAR(255)",
-		"bool":            "TINYINT NOT NULL",
-		"*bool":           "TINYINT",
-		"sql.NullBool":    "TINYINT",
-		"float32":         "DOUBLE NOT NULL",
+		"bool":            "BOOL NOT NULL",
+		"*bool":           "BOOL",
+		"sql.NullBool":    "BOOL",
+		"float32":         "FLOAT NOT NULL",
 		"float64":         "DOUBLE NOT NULL",
-		"*float32":        "DOUBLE",
+		"*float32":        "FLOAT",
 		"*float64":        "DOUBLE",
 		"sql.NullFloat64": "DOUBLE",
 		"time.Time":       "DATETIME NOT NULL",
@@ -69,7 +73,7 @@ func TestDiffWithSrc(t *testing.T) {
 	for t1, s1 := range types {
 		for t2, s2 := range types {
 			if err := testDiffWithSrc(t, t1, s1, t2, s2); err != nil {
-				t.Error(err)
+				t.Errorf("case [%v,%v] => [%v,%v]: %v", t1, s1, t2, s2, err)
 				continue
 			}
 		}
@@ -156,76 +160,100 @@ func testDiffWithSrc(t *testing.T, t1, s1, t2, s2 string) error {
 	return nil
 }
 
-func TestFprint(t *testing.T) {
-	for _, v := range []struct {
-		sqls   []string
-		expect string
-	}{
-		{[]string{`
-CREATE TABLE user (
-  name VARCHAR(255)
-)`}, `type User struct {
-	Name *string
-}
-
-`},
-		{[]string{`
-CREATE TABLE user (
-  name VARCHAR(255),
-  age  INT
-)`}, `type User struct {
-	Name *string
-	Age  *int
-}
-
-`},
-		{[]string{`
-CREATE TABLE user (
-  name VARCHAR(255)
-)`, `
-
-CREATE TABLE post (
-  title   VARCHAR(255),
-  content VARCHAR(65533)
-)`}, `type Post struct {
-	Title   *string
-	Content *string
-}
-
-type User struct {
-	Name *string
-}
-
-`},
-	} {
-		v := v
-		func() {
-			for _, sql := range v.sqls {
-				if _, err := db.Exec(sql); err != nil {
-					t.Error(err)
-					return
-				}
-			}
-			defer func() {
-				for _, v := range []string{
-					`DROP TABLE IF EXISTS user`,
-					`DROP TABLE IF EXISTS post`,
-				} {
-					if _, err := db.Exec(v); err != nil {
-						t.Fatal(err)
-					}
-				}
-			}()
-			var buf bytes.Buffer
-			if err := migu.Fprint(&buf, db); err != nil {
-				t.Error(err)
-				return
-			}
-			actual := buf.String()
-			expect := v.expect
-			if !reflect.DeepEqual(actual, expect) {
-				t.Errorf(`migu.Fprint(buf, db); buf => %#v; want %#v`, actual, expect)
-			}
-		}()
-	}
-}
+//func TestFprint(t *testing.T) {
+//	cases := []struct {
+//		sqls   []string
+//		expect string
+//	}{
+//		{
+//			sqls: []string{`
+//CREATE TABLE user (
+//  name VARCHAR(255)
+//)`},
+//			expect: "" +
+//				"type User struct {\n" +
+//				"	Name *string `migu:\"size:255\"`\n" +
+//				"}\n" +
+//				"\n" +
+//				"type UserIndex struct {\n" +
+//				"}\n" +
+//				"\n",
+//		},
+//		{
+//			sqls: []string{`
+//CREATE TABLE user (
+//  name VARCHAR(255),
+//  age  INT
+//)`},
+//			expect: "" +
+//				"type User struct {\n" +
+//				"	Name *string `migu:\"size:255\"`\n" +
+//				"	Age  *int\n" +
+//				"}\n" +
+//				"\n" +
+//				"type UserIndex struct {\n" +
+//				"}\n" +
+//				"\n",
+//		},
+//		{
+//			sqls: []string{`
+//CREATE TABLE user (
+//  name VARCHAR(255)
+//)`, `
+//
+//CREATE TABLE post (
+//  title   VARCHAR(255),
+//  content VARCHAR(65533)
+//)`,
+//			},
+//			expect: "" +
+//				"type Post struct {\n" +
+//				"	Title   *string `migu:\"size:255\"`\n" +
+//				"	Content *string `migu:\"size:65533\"`\n" +
+//				"}\n" +
+//				"\n" +
+//				"type PostIndex struct {\n" +
+//				"}\n" +
+//				"\n" +
+//				"type User struct {\n" +
+//				"	Name *string `migu:\"size:255\"`\n" +
+//				"}\n" +
+//				"\n" +
+//				"type UserIndex struct {\n" +
+//				"}\n" +
+//				"\n",
+//		},
+//	}
+//
+//	for i, v := range cases {
+//		v := v
+//		func() {
+//			for _, sql := range v.sqls {
+//				if _, err := db.Exec(sql); err != nil {
+//					t.Error(err)
+//					return
+//				}
+//			}
+//			defer func() {
+//				for _, v := range []string{
+//					`DROP TABLE IF EXISTS user`,
+//					`DROP TABLE IF EXISTS post`,
+//				} {
+//					if _, err := db.Exec(v); err != nil {
+//						t.Fatal(err)
+//					}
+//				}
+//			}()
+//			var buf bytes.Buffer
+//			if err := migu.Fprint(&buf, db); err != nil {
+//				t.Error(err)
+//				return
+//			}
+//			actual := buf.String()
+//			expect := v.expect
+//			if !reflect.DeepEqual(actual, expect) {
+//				t.Errorf(`migu.Fprint(buf, db); at %v buf => %#v; want %#v`, i, actual, expect)
+//			}
+//		}()
+//	}
+//}
