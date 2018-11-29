@@ -5,7 +5,16 @@ jobs:
     docker:
       - image: golang:latest
         environment:
+          MYSQL_DSN: usr:pwd@tcp(127.0.0.1:3306)/testdb
           REVIEWDOG_VERSION: "0.9.11"
+      - image: mysql:5.6
+        command: ['--character-set-server=utf8mb4']
+        environment:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_USER: usr
+          MYSQL_PASSWORD: pwd
+          MYSQL_DATABASE: testdb
     working_directory: /go/src/github.com/astronoka/migu
     steps:
       - checkout
@@ -14,6 +23,16 @@ jobs:
           command: 'echo "Golang $(go version)"'
       - run: 'go get -u github.com/golang/dep/cmd/dep'
       - run: 'dep ensure -v -vendor-only=true'
+      - run:
+          name: Install dockerize
+          command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+          environment:
+            DOCKERIZE_VERSION: v0.6.1
+      - run:
+          name: Wait for mysql
+          command: 'dockerize -wait tcp://127.0.0.1:3306 -timeout 120s'
+      - run: 'go test -race -coverprofile=coverage.txt -covermode=atomic'
+      - run: 'bash <(curl -s https://codecov.io/bash)'
       - run: 'curl -fSL https://github.com/haya14busa/reviewdog/releases/download/$REVIEWDOG_VERSION/reviewdog_linux_amd64 -o reviewdog && chmod +x ./reviewdog'
       - run: 'go get honnef.co/go/tools/cmd/unused'
       - run: 'unused ./... || true | ./reviewdog -efm="%f:%l:%c: %m" -name=unused -reporter=github-pr-check'

@@ -121,7 +121,7 @@ func (t *TableAST) CreateTableQuery(d dialect.Dialect) ([]string, error) {
 	createDefinitions := append(columns, indexes...)
 	createTableQuery := fmt.Sprintf(`CREATE TABLE %s (
   %s
-)`, d.Quote(toSchemaTableName(t.Name)), strings.Join(createDefinitions, ",\n  "))
+)`, d.Quote(toSchemaTableName(t.Name)), strings.Join(createDefinitions, ", "))
 
 	return []string{createTableQuery}, nil
 }
@@ -175,8 +175,8 @@ func (t *TableAST) AlterTableQueries(d dialect.Dialect, currentTable *Table) ([]
 		return nil, nil
 	}
 
-	alterTableQuery := fmt.Sprintf(`ALTER TABLE %s
-  %s`, d.Quote(tableName), strings.Join(migrations, ",\n  "))
+	alterTableQuery := fmt.Sprintf(`ALTER TABLE %s %s`,
+		d.Quote(tableName), strings.Join(migrations, ", "))
 	return []string{alterTableQuery}, nil
 }
 
