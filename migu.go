@@ -109,6 +109,13 @@ func newField(typeName string, f *ast.Field) (*field, error) {
 			return nil, err
 		}
 	}
+	if isSizeRequiredType(ret.Type) {
+		if ret.Size == 0 {
+			ret.Size = 255
+		}
+	} else {
+		ret.Size = 0
+	}
 	if f.Comment != nil {
 		ret.Comment = strings.TrimSpace(f.Comment.Text())
 	}
@@ -546,9 +553,6 @@ func parseStructTag(f *field, tag reflect.StructTag) error {
 		default:
 			return fmt.Errorf("unknown option: `%s'", opt)
 		}
-	}
-	if !isSizeRequiredType(f.Type) {
-		f.Size = 0
 	}
 	return nil
 }
