@@ -58,8 +58,8 @@ func (t *TableAST) HasSchema() bool {
 	return t.ColumnAST != nil
 }
 
-func (t *TableAST) ColumnMap() map[string]*field {
-	m := map[string]*field{}
+func (t *TableAST) ColumnMap() map[string]*Column {
+	m := map[string]*Column{}
 	for _, column := range t.MustColumns() {
 		m[column.Name] = column
 	}
@@ -74,8 +74,8 @@ func (t *TableAST) IndexMap() map[string]*Index {
 	return m
 }
 
-func (t *TableAST) Columns() ([]*field, error) {
-	models := make([]*field, 0)
+func (t *TableAST) Columns() ([]*Column, error) {
+	models := make([]*Column, 0)
 	if !t.HasSchema() {
 		return models, fmt.Errorf("migu: TableAST.Columns error: %s schema is empty", t.Name)
 	}
@@ -85,7 +85,7 @@ func (t *TableAST) Columns() ([]*field, error) {
 		if err != nil {
 			return nil, fmt.Errorf("migu: TableAST.Columns error: " + err.Error())
 		}
-		f, err := newField(typeName, fld)
+		f, err := newColumnFromAST(typeName, fld)
 		if err != nil {
 			return nil, fmt.Errorf("migu: TableAST.Columns error: " + err.Error())
 		}
@@ -123,7 +123,7 @@ func (t *TableAST) Indexes() ([]*Index, error) {
 	return indexes, nil
 }
 
-func (t *TableAST) MustColumns() []*field {
+func (t *TableAST) MustColumns() []*Column {
 	c, err := t.Columns()
 	if err != nil {
 		panic(err)

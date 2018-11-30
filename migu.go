@@ -83,7 +83,8 @@ func Diff(db *sql.DB, filename string, src interface{}) ([]string, error) {
 	return migrations, nil
 }
 
-type field struct {
+// Column is table column definition.
+type Column struct {
 	Name          string
 	Type          string
 	Comment       string
@@ -95,8 +96,8 @@ type field struct {
 	Size          uint64
 }
 
-func newField(typeName string, astF *ast.Field) (*field, error) {
-	ret := &field{
+func newColumnFromAST(typeName string, astF *ast.Field) (*Column, error) {
+	ret := &Column{
 		Type: typeName,
 	}
 	if astF.Tag != nil {
@@ -233,7 +234,7 @@ func detectTypeName(n ast.Node) (string, error) {
 	}
 }
 
-func columnSQL(d dialect.Dialect, f *field) string {
+func columnSQL(d dialect.Dialect, f *Column) string {
 	colType, null := d.ColumnType(f.Type, f.Size, f.AutoIncrement)
 	column := []string{d.Quote(toSchemaFieldName(f.Name)), colType}
 	if !null {
@@ -337,7 +338,7 @@ func indexStructAST(tableName string, indexes []*Index) (ast.Decl, error) {
 	}, nil
 }
 
-func parseStructTag(f *field, tag reflect.StructTag) error {
+func parseStructTag(f *Column, tag reflect.StructTag) error {
 	migu := tag.Get("migu")
 	if migu == "" {
 		return nil
