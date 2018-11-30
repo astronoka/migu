@@ -172,7 +172,7 @@ func (schema *columnSchema) hasCharacterMaximumLength() bool {
 	return schema.CharacterMaximumLength != nil
 }
 
-func (schema *columnSchema) HasDifference(newColumn *field) bool {
+func hasDifference(schema *columnSchema, newColumn *field) bool {
 	goTypes, err := schema.GoFieldTypes()
 	if err != nil {
 		panic(err)

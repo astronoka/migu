@@ -254,7 +254,7 @@ func (t *TableAST) GenerateModifyFieldSQLs(d dialect.Dialect, currentColumMap ma
 			continue
 		}
 		currentColum := currentColumMap[column.Name]
-		if !currentColum.HasDifference(column) {
+		if !hasDifference(currentColum, column) {
 			continue
 		}
 		sqls = append(sqls, fmt.Sprintf(`MODIFY %s`, columnSQL(d, column)))
