@@ -7,9 +7,7 @@ import (
 	"go/format"
 	"go/token"
 	"io"
-	"reflect"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/astronoka/migu/dialect"
@@ -81,32 +79,6 @@ func Diff(db *sql.DB, filename string, src interface{}) ([]string, error) {
 		migrations = append(migrations, fmt.Sprintf(`DROP TABLE %s`, d.Quote(toSchemaTableName(name))))
 	}
 	return migrations, nil
-}
-
-func newColumnFromAST(typeName string, astF *ast.Field) (*Column, error) {
-	ret := &Column{
-		Type: typeName,
-	}
-	if astF.Tag != nil {
-		s, err := strconv.Unquote(astF.Tag.Value)
-		if err != nil {
-			return nil, err
-		}
-		if err := parseStructTag(ret, reflect.StructTag(s)); err != nil {
-			return nil, err
-		}
-	}
-	if isSizeRequiredType(ret.Type) {
-		if ret.Size == 0 {
-			ret.Size = 255
-		}
-	} else {
-		ret.Size = 0
-	}
-	if astF.Comment != nil {
-		ret.Comment = strings.TrimSpace(astF.Comment.Text())
-	}
-	return ret, nil
 }
 
 // Fprint generates Go's structs from database schema and writes to output.
@@ -323,102 +295,6 @@ func indexStructAST(tableName string, indexes []*Index) (ast.Decl, error) {
 			},
 		},
 	}, nil
-}
-
-func parseStructTag(f *Column, tag reflect.StructTag) error {
-	migu := tag.Get("migu")
-	if migu == "" {
-		return nil
-	}
-	for _, opt := range strings.Split(migu, tagSeparater) {
-		optval := strings.SplitN(opt, ":", 2)
-		switch optval[0] {
-		case tagDefault:
-			if len(optval) > 1 {
-				if f.Type == "bool" {
-					f.Default = normalizeBoolDefaultTagTo0or1(optval[1])
-				} else {
-					f.Default = optval[1]
-				}
-			}
-		case tagPrimaryKey:
-			f.PrimaryKey = true
-		case tagAutoIncrement:
-			f.AutoIncrement = true
-		case tagUnique:
-			f.Unique = true
-		case tagIgnore:
-			f.Ignore = true
-		case tagSize:
-			if len(optval) < 2 {
-				return fmt.Errorf("`size` tag must specify the parameter")
-			}
-			size, err := strconv.ParseUint(optval[1], 10, 64)
-			if err != nil {
-				return err
-			}
-			f.Size = size
-		default:
-			return fmt.Errorf("unknown option: `%s'", opt)
-		}
-	}
-	return nil
-}
-
-func normalizeBoolDefaultTagTo0or1(s string) string {
-	switch strings.ToLower(s) {
-	case "1", "true", "on":
-		return "1"
-	}
-	return "0"
-}
-
-func isSizeRequiredType(typeName string) bool {
-	types := []string{"string", "*string", "sql.NullString"}
-	return containsString(types, typeName)
-}
-
-func parseIndexStructTag(tag reflect.StructTag) (*Index, error) {
-	migu := tag.Get("migu")
-	if migu == "" {
-		return nil, fmt.Errorf("migu: parseIndexStructTag: index tag must not be empty")
-	}
-	index := &Index{}
-	isPrimaryKey := false
-	for _, opt := range strings.Split(migu, tagSeparater) {
-		optval := strings.SplitN(opt, ":", 2)
-		if len(optval) < 1 {
-			return nil, fmt.Errorf("migu: parseIndexStructTag: 'migu' tag must specify values")
-		}
-		switch optval[0] {
-		case tagPrimaryKey:
-			isPrimaryKey = true
-		case tagIndex:
-			if len(optval) < 2 {
-				return nil, fmt.Errorf("migu: parseIndexStructTag: '%s' tag must specify parameters", tagIndex)
-			}
-			params := strings.SplitN(optval[1], ",", -1)
-			if len(params) < 1 {
-				return nil, fmt.Errorf("migu: parseIndexStructTag: '%s' tag must specify one column at least", tagIndex)
-			}
-			if len(params) == 1 {
-				index.Name = params[0]
-				index.ColumnNames = params
-			} else {
-				index.Name = params[0]
-				index.ColumnNames = params[1:]
-			}
-		case tagUnique:
-			index.Unique = true
-		default:
-			return nil, fmt.Errorf("migu: parseIndexStructTag: unknown option: `%s'", opt)
-		}
-	}
-	if isPrimaryKey {
-		index.Name = "PRIMARY"
-		index.Unique = true
-	}
-	return index, nil
 }
 
 func toPublicStructName(s string) string {
