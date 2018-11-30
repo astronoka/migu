@@ -7,6 +7,7 @@ import (
 
 // Table is table definitions
 type Table struct {
+	Name    string
 	Columns []*columnSchema
 	Indexes []*Index
 }
@@ -23,6 +24,7 @@ func newTablesFromDB(db *sql.DB) (map[string]*Table, error) {
 	tables := make(map[string]*Table)
 	for tableName, columns := range tableColumns {
 		tables[tableName] = &Table{
+			Name:    tableName,
 			Columns: columns,
 		}
 	}
