@@ -96,12 +96,12 @@ type field struct {
 	Size          uint64
 }
 
-func newField(typeName string, f *ast.Field) (*field, error) {
+func newField(typeName string, astF *ast.Field) (*field, error) {
 	ret := &field{
 		Type: typeName,
 	}
-	if f.Tag != nil {
-		s, err := strconv.Unquote(f.Tag.Value)
+	if astF.Tag != nil {
+		s, err := strconv.Unquote(astF.Tag.Value)
 		if err != nil {
 			return nil, err
 		}
@@ -116,8 +116,8 @@ func newField(typeName string, f *ast.Field) (*field, error) {
 	} else {
 		ret.Size = 0
 	}
-	if f.Comment != nil {
-		ret.Comment = strings.TrimSpace(f.Comment.Text())
+	if astF.Comment != nil {
+		ret.Comment = strings.TrimSpace(astF.Comment.Text())
 	}
 	return ret, nil
 }
