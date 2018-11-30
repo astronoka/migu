@@ -543,7 +543,7 @@ func parseStructTag(f *field, tag reflect.StructTag) error {
 			f.Ignore = true
 		case tagSize:
 			if len(optval) < 2 {
-				return fmt.Errorf("`size' tag must specify the parameter")
+				return fmt.Errorf("`size` tag must specify the parameter")
 			}
 			size, err := strconv.ParseUint(optval[1], 10, 64)
 			if err != nil {
