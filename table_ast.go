@@ -13,9 +13,9 @@ import (
 )
 
 type TableAST struct {
-	Name     string
-	FieldAST *ast.StructType
-	IndexAST *ast.StructType
+	Name      string
+	ColumnAST *ast.StructType
+	IndexAST  *ast.StructType
 }
 
 func newTableASTsFromFile(filename string, src interface{}) (map[string]*TableAST, error) {
@@ -43,7 +43,7 @@ func newTableASTsFromFile(filename string, src interface{}) (map[string]*TableAS
 				if isIndex {
 					tableASTMap[schemaTableName].IndexAST = t
 				} else {
-					tableASTMap[schemaTableName].FieldAST = t
+					tableASTMap[schemaTableName].ColumnAST = t
 				}
 			}
 			return false
@@ -55,7 +55,7 @@ func newTableASTsFromFile(filename string, src interface{}) (map[string]*TableAS
 }
 
 func (t *TableAST) HasSchema() bool {
-	return t.FieldAST != nil
+	return t.ColumnAST != nil
 }
 
 func (t *TableAST) ColumnMap() map[string]*field {
@@ -80,8 +80,7 @@ func (t *TableAST) Columns() ([]*field, error) {
 		return models, fmt.Errorf("migu: TableAST.Columns error: %s schema is empty", t.Name)
 	}
 
-	structAST := t.FieldAST
-	for _, fld := range structAST.Fields.List {
+	for _, fld := range t.ColumnAST.Fields.List {
 		typeName, err := detectTypeName(fld)
 		if err != nil {
 			return nil, fmt.Errorf("migu: TableAST.Columns error: " + err.Error())
