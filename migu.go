@@ -83,19 +83,6 @@ func Diff(db *sql.DB, filename string, src interface{}) ([]string, error) {
 	return migrations, nil
 }
 
-// Column is table column definition.
-type Column struct {
-	Name          string
-	Type          string
-	Comment       string
-	Unique        bool
-	PrimaryKey    bool
-	AutoIncrement bool
-	Ignore        bool
-	Default       string
-	Size          uint64
-}
-
 func newColumnFromAST(typeName string, astF *ast.Field) (*Column, error) {
 	ret := &Column{
 		Type: typeName,
