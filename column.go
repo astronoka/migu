@@ -177,7 +177,7 @@ func (schema *columnSchema) HasDifference(newColumn *field) bool {
 	if err != nil {
 		panic(err)
 	}
-	if !inStrings(goTypes, newColumn.Type) {
+	if !containsString(goTypes, newColumn.Type) {
 		return true
 	}
 

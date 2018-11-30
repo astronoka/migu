@@ -567,7 +567,7 @@ func normalizeBoolDefaultTagTo0or1(s string) string {
 
 func isSizeRequiredType(typeName string) bool {
 	types := []string{"string", "*string", "sql.NullString"}
-	return inStrings(types, typeName)
+	return containsString(types, typeName)
 }
 
 func parseIndexStructTag(tag reflect.StructTag) (*Index, error) {
