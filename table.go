@@ -11,7 +11,7 @@ type Table struct {
 	Indexes []*Index
 }
 
-func getAllTables(db *sql.DB) (map[string]*Table, error) {
+func newTablesFromDB(db *sql.DB) (map[string]*Table, error) {
 	dbname, err := getCurrentDBName(db)
 	if err != nil {
 		return nil, err

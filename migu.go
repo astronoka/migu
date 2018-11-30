@@ -52,7 +52,7 @@ func Diff(db *sql.DB, filename string, src interface{}) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("migu: Diff error. " + err.Error())
 	}
-	currentTableMap, err := getAllTables(db)
+	currentTableMap, err := newTablesFromDB(db)
 	if err != nil {
 		return nil, fmt.Errorf("migu: Diff error. " + err.Error())
 	}
@@ -123,7 +123,7 @@ func newField(typeName string, astF *ast.Field) (*field, error) {
 
 // Fprint generates Go's structs from database schema and writes to output.
 func Fprint(output io.Writer, db *sql.DB) error {
-	tableMap, err := getAllTables(db)
+	tableMap, err := newTablesFromDB(db)
 	if err != nil {
 		return err
 	}
