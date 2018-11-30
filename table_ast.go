@@ -13,9 +13,9 @@ import (
 )
 
 type TableAST struct {
-	Name        string
-	FieldAST    *ast.StructType
-	IndexSchema *ast.StructType
+	Name     string
+	FieldAST *ast.StructType
+	IndexAST *ast.StructType
 }
 
 func newTableASTsFromFile(filename string, src interface{}) (map[string]*TableAST, error) {
@@ -41,7 +41,7 @@ func newTableASTsFromFile(filename string, src interface{}) (map[string]*TableAS
 					tableASTMap[schemaTableName] = &TableAST{Name: tableName}
 				}
 				if isIndex {
-					tableASTMap[schemaTableName].IndexSchema = t
+					tableASTMap[schemaTableName].IndexAST = t
 				} else {
 					tableASTMap[schemaTableName].FieldAST = t
 				}
@@ -104,10 +104,10 @@ func (t *TableAST) Columns() ([]*field, error) {
 
 func (t *TableAST) Indexes() ([]*Index, error) {
 	indexes := make([]*Index, 0)
-	if t.IndexSchema == nil {
+	if t.IndexAST == nil {
 		return indexes, nil
 	}
-	for _, fld := range t.IndexSchema.Fields.List {
+	for _, fld := range t.IndexAST.Fields.List {
 		if fld.Tag == nil {
 			continue
 		}
