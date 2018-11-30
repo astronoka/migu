@@ -49,7 +49,7 @@ func Sync(db *sql.DB, filename string, src interface{}) error {
 
 // Diff returns SQLs for schema synchronous between database and Go's struct.
 func Diff(db *sql.DB, filename string, src interface{}) ([]string, error) {
-	expectedTableASTMap, err := makeTableASTMap(filename, src)
+	expectedTableASTMap, err := newTableASTsFromFile(filename, src)
 	if err != nil {
 		return nil, fmt.Errorf("migu: Diff error. " + err.Error())
 	}
@@ -345,7 +345,7 @@ func fprintln(output io.Writer, decl ast.Decl) error {
 	return nil
 }
 
-func makeTableASTMap(filename string, src interface{}) (map[string]*TableAST, error) {
+func newTableASTsFromFile(filename string, src interface{}) (map[string]*TableAST, error) {
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, filename, src, parser.ParseComments)
 	if err != nil {
