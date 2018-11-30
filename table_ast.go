@@ -3,6 +3,8 @@ package migu
 import (
 	"fmt"
 	"go/ast"
+	"go/parser"
+	"go/token"
 	"reflect"
 	"strconv"
 	"strings"
@@ -14,6 +16,42 @@ type TableAST struct {
 	Name        string
 	Schema      *ast.StructType
 	IndexSchema *ast.StructType
+}
+
+func newTableASTsFromFile(filename string, src interface{}) (map[string]*TableAST, error) {
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, filename, src, parser.ParseComments)
+	if err != nil {
+		return nil, err
+	}
+	ast.FileExports(f)
+	tableASTMap := map[string]*TableAST{}
+	ast.Inspect(f, func(n ast.Node) bool {
+		switch x := n.(type) {
+		case *ast.TypeSpec:
+			if t, ok := x.Type.(*ast.StructType); ok {
+				tableName := x.Name.Name
+				isIndex := false
+				if strings.HasSuffix(x.Name.Name, "Index") {
+					tableName = strings.TrimSuffix(x.Name.Name, "Index")
+					isIndex = true
+				}
+				schemaTableName := toSchemaTableName(tableName)
+				if _, exist := tableASTMap[schemaTableName]; !exist {
+					tableASTMap[schemaTableName] = &TableAST{Name: tableName}
+				}
+				if isIndex {
+					tableASTMap[schemaTableName].IndexSchema = t
+				} else {
+					tableASTMap[schemaTableName].Schema = t
+				}
+			}
+			return false
+		default:
+			return true
+		}
+	})
+	return tableASTMap, nil
 }
 
 func (t *TableAST) HasSchema() bool {

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"go/ast"
 	"go/format"
-	"go/parser"
 	"go/token"
 	"io"
 	"reflect"
@@ -343,42 +342,6 @@ func fprintln(output io.Writer, decl ast.Decl) error {
 	}
 	fmt.Fprintf(output, "\n\n")
 	return nil
-}
-
-func newTableASTsFromFile(filename string, src interface{}) (map[string]*TableAST, error) {
-	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, filename, src, parser.ParseComments)
-	if err != nil {
-		return nil, err
-	}
-	ast.FileExports(f)
-	tableASTMap := map[string]*TableAST{}
-	ast.Inspect(f, func(n ast.Node) bool {
-		switch x := n.(type) {
-		case *ast.TypeSpec:
-			if t, ok := x.Type.(*ast.StructType); ok {
-				tableName := x.Name.Name
-				isIndex := false
-				if strings.HasSuffix(x.Name.Name, "Index") {
-					tableName = strings.TrimSuffix(x.Name.Name, "Index")
-					isIndex = true
-				}
-				schemaTableName := toSchemaTableName(tableName)
-				if _, exist := tableASTMap[schemaTableName]; !exist {
-					tableASTMap[schemaTableName] = &TableAST{Name: tableName}
-				}
-				if isIndex {
-					tableASTMap[schemaTableName].IndexSchema = t
-				} else {
-					tableASTMap[schemaTableName].Schema = t
-				}
-			}
-			return false
-		default:
-			return true
-		}
-	})
-	return tableASTMap, nil
 }
 
 func sortTableASTNames(tableASTMap map[string]*TableAST) []string {
