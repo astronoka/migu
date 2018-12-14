@@ -104,14 +104,14 @@ func (schema *columnSchema) GoFieldTypes() ([]string, error) {
 	case "mediumint", "int":
 		if schema.isUnsigned() {
 			if schema.isNullable() {
-				return []string{"*uint", "*uint32"}, nil
+				return []string{"*uint32", "*uint"}, nil
 			}
-			return []string{"uint", "uint32"}, nil
+			return []string{"uint32", "uint"}, nil
 		}
 		if schema.isNullable() {
-			return []string{"*int", "*int32"}, nil
+			return []string{"*int32", "*int"}, nil
 		}
-		return []string{"int", "int32"}, nil
+		return []string{"int32", "int"}, nil
 	case "bigint":
 		if schema.isUnsigned() {
 			if schema.isNullable() {
@@ -185,7 +185,7 @@ func hasDifference(schema *columnSchema, newColumn *Column) bool {
 	if err != nil {
 		panic(err)
 	}
-	currentColumn, err := newColumnFromAST(newColumn.Type, fieldAST)
+	currentColumn, err := newColumnFromAST(fieldAST)
 	currentColumn.Name = newColumn.Name
 	if err != nil {
 		panic(err)

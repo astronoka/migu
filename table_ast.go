@@ -81,11 +81,7 @@ func (t *TableAST) Columns() ([]*Column, error) {
 	}
 
 	for _, fld := range t.ColumnAST.Fields.List {
-		typeName, err := detectTypeName(fld)
-		if err != nil {
-			return nil, fmt.Errorf("migu: TableAST.Columns error: " + err.Error())
-		}
-		f, err := newColumnFromAST(typeName, fld)
+		f, err := newColumnFromAST(fld)
 		if err != nil {
 			return nil, fmt.Errorf("migu: TableAST.Columns error: " + err.Error())
 		}
@@ -294,10 +290,16 @@ func (t *TableAST) GenerateDropIndexSQLs(d dialect.Dialect, currentIndexMap map[
 	return sqls, nil
 }
 
-func newColumnFromAST(typeName string, astF *ast.Field) (*Column, error) {
-	ret := &Column{
-		Type: typeName,
+func newColumnFromAST(astF *ast.Field) (*Column, error) {
+	typeName, err := detectTypeName(astF)
+	if err != nil {
+		return nil, fmt.Errorf("migu: TableAST.Columns error: " + err.Error())
 	}
+
+	ret := &Column{
+		Type: normalizeTypeName(typeName),
+	}
+
 	if astF.Tag != nil {
 		s, err := strconv.Unquote(astF.Tag.Value)
 		if err != nil {
@@ -318,6 +320,29 @@ func newColumnFromAST(typeName string, astF *ast.Field) (*Column, error) {
 		ret.Comment = strings.TrimSpace(astF.Comment.Text())
 	}
 	return ret, nil
+}
+
+func normalizeTypeName(typeName string) string {
+	switch typeName {
+	case "int":
+		return "int32"
+	case "*int":
+		return "*int32"
+	case "uint":
+		return "uint32"
+	case "*uint":
+		return "*uint32"
+	case "sql.NullInt64":
+		return "*int64"
+	case "sql.NullString":
+		return "*string"
+	case "sql.NullBool":
+		return "*bool"
+	case "sql.NullFloat64":
+		return "*float64"
+	default:
+		return typeName
+	}
 }
 
 func parseStructTag(f *Column, tag reflect.StructTag) error {
